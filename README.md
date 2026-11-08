@@ -10,7 +10,6 @@ Leash is a Solana vault an AI agent can spend from, but only within rules that a
 |---|---|
 | 🌐 **Live app** | [leash-pink.vercel.app](https://leash-pink.vercel.app/) |
 | ⛓️ **Program (Devnet)** | [`3FYwa35S5PAQZkqgXHEkTgB414P7j1zXAvwg6fX3YxV5`](https://explorer.solana.com/address/3FYwa35S5PAQZkqgXHEkTgB414P7j1zXAvwg6fX3YxV5?cluster=devnet) |
-| 🎥 **Demo video** | *coming soon* |
 
 ---
 
