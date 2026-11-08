@@ -33,7 +33,21 @@ export function getAgentSigner(): Promise<KeyPairSigner> {
   if (!agentSigner) {
     const raw = process.env.AGENT_SECRET_KEY;
     if (!raw) throw new Error("AGENT_SECRET_KEY is not set");
-    agentSigner = createKeyPairSignerFromBytes(Uint8Array.from(JSON.parse(raw) as number[]));
+    // Never include the value (or the parser's message, which can quote it) in any error.
+    let bytes: number[];
+    try {
+      bytes = JSON.parse(raw);
+    } catch {
+      throw new Error("AGENT_SECRET_KEY is malformed (expected a JSON array of 64 numbers)");
+    }
+    if (!Array.isArray(bytes) || bytes.length !== 64 || !bytes.every((b) => Number.isInteger(b) && b >= 0 && b <= 255)) {
+      throw new Error("AGENT_SECRET_KEY is malformed (expected a JSON array of 64 numbers)");
+    }
+    agentSigner = createKeyPairSignerFromBytes(Uint8Array.from(bytes)).catch((e) => {
+      agentSigner = null;
+      console.error("Invalid AGENT_SECRET_KEY bytes:", e instanceof Error ? e.name : "error");
+      throw new Error("AGENT_SECRET_KEY is not a valid keypair");
+    });
   }
   return agentSigner;
 }

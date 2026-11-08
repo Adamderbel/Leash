@@ -53,7 +53,9 @@ export async function POST(request: Request) {
       return json({ ...result, engine: "fallback" });
     }
   } catch (e) {
-    console.error("agent error", e);
-    return json({ reply: "", actions: [], engine: "direct", error: e instanceof Error ? e.message : "Agent error" }, 500);
+    // Details go to the private server logs only; visitors get a generic message so nothing sensitive can leak.
+    const ref = Math.random().toString(36).slice(2, 8);
+    console.error(`agent error [${ref}]`, e);
+    return json({ reply: "", actions: [], engine: "direct", error: `The agent hit an internal error (ref ${ref}). Please try again.` }, 500);
   }
 }
