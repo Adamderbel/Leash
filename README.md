@@ -32,6 +32,35 @@ You (Phantom) ── set rules, deposit, approve ──┐
 AI agent ── "pay Alice 0.1 SOL" ──▶  Leash program (on Solana) ──▶ Vault pays ✅ / rejects ⛔
 ```
 
+## 🧪 Try the live demo
+
+Runs on Solana **Devnet** with free test SOL. About 3 minutes.
+
+1. **Set up Phantom.** Install it (the app's **Install Phantom** button links to it), then go to Settings → Developer Settings → turn on **Testnet Mode** → **Solana Devnet** ⚠️, and copy your address.
+2. **Get test SOL** at [faucet.solana.com](https://faucet.solana.com) (Devnet, 1–2 SOL).
+3. **Open the [app](https://leash-pink.vercel.app/)** → **Connect Phantom** → **Create vault** (keep the defaults, about 0.56 SOL).
+4. **Add recipient `Alice`:** `6gh1EPKQGWChrP75kZK7Lzt7jUruNKKCbwFT84TY7jvG` (or any address, e.g. a second Phantom account).
+5. **Unlock the agent** (a free signature), then try:
+
+| Try this | Expected result |
+|---|---|
+| *"Pay Alice 0.05 SOL for coffee"* | ✅ Paid instantly, no wallet popup |
+| *"Pay Alice 0.5 SOL for the website"* | ✋ Waits for your **Approve & pay** |
+| **🧪 Try a prompt injection** / **💀 Simulate hacked agent** | ⛔ Blocked by Solana; click **tx ↗** to see it on Explorer |
+| **⏸ Pause agent**, then ask it to pay | ⛔ "The agent is paused by the owner" |
+
+<details>
+<summary>Troubleshooting</summary>
+
+| Problem | Fix |
+|---|---|
+| Shows 0 SOL or transactions fail | Phantom isn't on Devnet (step 1) |
+| Faucet says the limit is reached | Sign in with GitHub on the faucet, or wait and retry |
+| "Install Phantom" still shows after installing | Refresh the page |
+| Agent says it's out of gas | Click **"Low, top up 0.05"** under **Agent gas** |
+
+</details>
+
 ## How a payment is decided
 
 Every time the agent tries to pay, the program runs these checks in order:
@@ -50,42 +79,28 @@ Blocked attempts are sent on purpose, so they **land on-chain as failed transact
 
 ## Features
 
-- **Vault dashboard:** create a vault, deposit/withdraw, edit rules, manage recipients (name → address), pause switch, live activity feed with Explorer links.
-- **AI agent chat:** natural language (*"pay Alice 0.1 SOL for the logo"*, *"how much can I still spend today?"*), powered by Groq with tool calling.
-- **Approvals inbox:** payments above your auto-approve limit wait for you, with Approve & pay / Reject.
-- **Attack demos:**
-  - 🧪 **Prompt injection:** a fake "SYSTEM OVERRIDE" message tries to make the AI send 5 SOL to an attacker.
-  - 💀 **Simulated hacked agent:** skips the AI entirely and sends the malicious payment directly. Solana rejects it.
-- **Wallet sign-in for the agent:** owners unlock the chat by signing a free message, so only the vault owner can drive their agent.
-- **No database:** all state lives on-chain. Vault addresses are derived from the owner's wallet (PDAs).
+| | Feature | What it does |
+|---|---|---|
+| 🏦 | **Vault dashboard** | Create a vault, deposit/withdraw, edit rules, manage recipients, pause, live activity feed |
+| 🤖 | **AI agent chat** | Natural-language payments (*"pay Alice 0.1 SOL for the logo"*) via Groq tool calling |
+| ✋ | **Approvals inbox** | Payments above the auto-approve limit wait for one-click owner approval |
+| 💀 | **Attack demos** | A prompt injection and a fully hacked agent, both blocked on-chain |
+| 🔐 | **Wallet sign-in** | Only the vault owner can drive their agent (free signed message) |
+| 🗄️ | **No database** | All state lives on-chain, derived from the owner's wallet (PDAs) |
 
 ## Use cases
 
-### One vault, any interface
-
-The rules live on Solana, not in our website, so **any interface** can drive the agent and the limits still hold.
+The rules live on Solana, not in our website, so **any interface** can drive the agent and the limits still hold:
 
 | Interface | Example |
 |---|---|
-| 💬 **Telegram bot** | Message `@LeashBot`: *"pay Sara 0.2 SOL for the logo"* → paid, with the Explorer link in the reply |
-| 🎮 **Discord bot** | A community bot that tips helpful members or pays bounties from a team vault |
-| 📱 **WhatsApp / SMS** | Payments by text message for people who never open a crypto app |
+| 💬 **Telegram / Discord bot** | *"pay Sara 0.2 SOL for the logo"* in a chat |
 | 🎙️ **Voice assistant** | *"Hey assistant, pay the cleaner 0.5 SOL"* |
-| 🤖 **Other AI agents** | Coding, shopping or research agents use Leash as their wallet through an API / MCP tool |
-| 🌐 **Any website** | An embeddable chat widget, like the one in our dashboard |
+| 🤖 **Other AI agents** | Coding or shopping agents use Leash as their wallet via an API / MCP tool |
 
-Whatever the channel, the owner keeps the same dashboard to set rules, approve big payments and pause the agent.
+**Example scenarios:** paying freelancers · pay-per-use APIs · family allowances · team bounties from a shared treasury.
 
-### Real-world scenarios
-
-- **Freelancers & contractors:** the agent pays approved freelancers when work is delivered; bigger invoices wait for the owner's approval.
-- **Pay-per-use APIs & AI services:** an agent buys API calls or compute in tiny amounts, capped by a daily budget.
-- **Subscriptions & bills:** recurring payments to known services, made automatically within limits.
-- **Family allowance:** a parent's vault lets a teen's assistant spend up to a set amount per day at approved shops.
-- **Small business expenses:** an "office agent" orders supplies from approved vendors and asks before large purchases.
-- **Teams & DAOs:** a community bot pays bounties and tips from a shared treasury without giving anyone the keys.
-
-> **What's built today:** the web dashboard and the chat agent. Telegram/Discord bots and an agent SDK / MCP server are planned next. They reuse the same `/api/agent` endpoint and on-chain program, so no contract changes are needed.
+> **Built today:** the web dashboard and the chat agent. Bots and an SDK / MCP server would reuse the same API and on-chain program.
 
 ## Architecture
 
@@ -171,15 +186,6 @@ npm install
 cp .env.example .env.local     # then fill in the values below
 npm run dev                    # http://localhost:3000
 ```
-
-| Variable | Description |
-|---|---|
-| `NEXT_PUBLIC_SOLANA_RPC_URL` / `NEXT_PUBLIC_SOLANA_WS_URL` | Devnet RPC endpoints |
-| `NEXT_PUBLIC_AGENT_ADDRESS` | Public address of the agent key (pre-filled when creating a vault) |
-| `AGENT_SECRET_KEY` | Agent keypair as a JSON array of 64 numbers (`solana-keygen new -o agent.json`). **Server-only.** Fund it with ~0.05 SOL for fees. |
-| `GROQ_API_KEY` | Groq API key. **Server-only.** |
-| `GROQ_MODEL` | Comma-separated models tried in order, e.g. `openai/gpt-oss-120b,qwen/qwen3.8-27b` |
-
 After changing the program, regenerate the TypeScript client:
 ```bash
 cp target/idl/leash.json web/idl/ && cd web && npm run codegen
